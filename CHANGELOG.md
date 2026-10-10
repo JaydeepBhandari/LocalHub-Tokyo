@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0] - Prototype Data Limiting
+### Changed
+- **Per-Category Spot Cap**: Added `MAX_PER_CATEGORY=12` limit in `import_tokyo.js` so each category gets ~10-15 spots max, keeping the prototype dataset small and manageable.
+- **Seed Async Fix**: Fixed `seed.js` to properly `await` the `importTokyo()` function and exit cleanly after seeding completes.
+- **Import Cleanup**: Added category breakdown logging at end of import for quick verification.
+
+### Fixed
+- **`.gitignore`**: Added `backend/scripts/.osm_cache/` to prevent cached OSM API responses from being committed.
+
+
 ## [1.1.0] - Phase 2 Redesign & Real Data Update
 ### Added
 - **OpenStreetMap Import**: Added `npm run import:places` script that queries the Overpass API to seed real businesses and locations in Surat, Gujarat.

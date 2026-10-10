@@ -19,3 +19,6 @@ backend/uploads/*
 
 # Logs
 npm-debug.log*
+
+# OSM cache
+backend/scripts/.osm_cache/

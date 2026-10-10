@@ -2,6 +2,7 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const slugify = require('slugify');
 const Business = require('../models/Business');
 require('dotenv').config({ path: '../.env' });
 
@@ -80,19 +81,27 @@ async function importTokyo() {
     await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/localhub-tokyo');
   }
   
-  const MAX_SPOTS = parseInt(process.env.MAX_SPOTS || '80', 10);
+  const MAX_SPOTS = parseInt(process.env.MAX_SPOTS || '160', 10);
+  const MAX_PER_CATEGORY = parseInt(process.env.MAX_PER_CATEGORY || '12', 10);
   let totalImported = 0;
+  const categoryCounts = new Map();
   
   // Iconic list (must have)
   const iconicNames = ["Senso-ji", "Meiji Jingu", "Ghibli Museum", "Tokyo Skytree", "Tokyo Tower", "Shibuya Crossing", "Shibuya Sky", "teamLab Planets", "Ueno Park", "Tokyo National Museum", "Nezu Museum", "Yoyogi Park", "Shinjuku Gyoen", "Golden Gai", "Omoide Yokocho", "Tsukiji Outer Market", "Ameyoko", "Akihabara", "Kappabashi", "Yanaka Ginza", "Takeshita Street", "Shimokitazawa", "Nakameguro", "Koenji", "Jimbocho", "Hamarikyu Gardens", "Mori Art Museum", "Hokusai Museum"];
   
-  const normalizeName = (n) => n.toLowerCase().replace(/[^\w]/g, '');
+  const normalizeName = (n) => (n || '').toLowerCase().replace(/[^\w]/g, '');
 
   const seenNames = new Set();
+  const seenCoords = [];
   const existingSpots = await Business.find({});
   for (const s of existingSpots) {
     seenNames.add(normalizeName(s.name));
     if (s.nameJa) seenNames.add(normalizeName(s.nameJa));
+    if (s.geo && s.geo.coordinates && s.geo.coordinates.length === 2) {
+      seenCoords.push({ lon: s.geo.coordinates[0], lat: s.geo.coordinates[1], category: s.category });
+      categoryCounts.set(s.category, (categoryCounts.get(s.category) || 0) + 1);
+      totalImported++;
+    }
   }
   
   for (const ward of TOKYO_WARDS) {
@@ -117,8 +126,11 @@ async function importTokyo() {
     for (const el of elements) {
       if (totalImported >= MAX_SPOTS) break;
       if (wardSpots >= 6 && !iconicNames.some(i => (el.tags['name:en'] || el.tags.name || '').includes(i))) continue;
-      
+
       const category = mapOsmTagsToCategory(el.tags);
+      const catCount = categoryCounts.get(category) || 0;
+      if (catCount >= MAX_PER_CATEGORY) continue;
+      
       let nameEn = el.tags['name:en'] || el.tags.name;
       let nameJa = el.tags['name:ja'] || (el.tags['name:en'] ? el.tags.name : '');
       
@@ -134,21 +146,19 @@ async function importTokyo() {
       
       if (!lat || !lon) continue;
       
-      // Proximity check (simple bounding box around 50m: roughly 0.0005 deg)
-      const nearby = await Business.findOne({
-        "geo.coordinates": {
-          $near: {
-            $geometry: { type: "Point", coordinates: [lon, lat] },
-            $maxDistance: 50
-          }
-        },
-        category
-      });
-      if (nearby) continue;
+      // Proximity check (50m: ~0.00045 degrees)
+      const isTooClose = seenCoords.some(c => 
+        c.category === category && 
+        Math.abs(c.lat - lat) < 0.00045 && 
+        Math.abs(c.lon - lon) < 0.00045
+      );
+      if (isTooClose) continue;
 
+      const baseSlug = slugify(nameEn, { lower: true, strict: true }) || 'spot';
       const newBusiness = {
         name: nameEn,
         nameJa: nameJa,
+        slug: `${baseSlug}-${el.type}-${el.id}`,
         category,
         ward: ward,
         description: el.tags.description || el.tags['description:en'] || '',
@@ -172,14 +182,16 @@ async function importTokyo() {
         await Business.findOneAndUpdate(
           { sourceId: newBusiness.sourceId },
           newBusiness,
-          { upsert: true, new: true, setDefaultsOnInsert: true }
+          { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
         );
         seenNames.add(normNameEn);
         if (normNameJa) seenNames.add(normNameJa);
+        seenCoords.push({ lon, lat, category });
         totalImported++;
         wardSpots++;
+        categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
       } catch (err) {
-        // Skip duplicate
+        console.error(`Error saving spot ${nameEn}:`, err.message);
       }
     }
     
@@ -188,6 +200,10 @@ async function importTokyo() {
   }
   
   console.log(`Done! Imported/Updated ${totalImported} spots in Tokyo.`);
+  console.log('Category breakdown:');
+  for (const [cat, count] of categoryCounts.entries()) {
+    console.log(`  ${cat}: ${count}`);
+  }
 }
 
 module.exports = importTokyo;

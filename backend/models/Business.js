@@ -179,5 +179,5 @@ businessSchema.pre("save", function () {
       Date.now().toString(36);
   }
 });
-
+businessSchema.index({ "geo.coordinates": "2dsphere" });
 module.exports = mongoose.model("Business", businessSchema);

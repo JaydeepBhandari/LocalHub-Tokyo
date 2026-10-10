@@ -12,8 +12,9 @@ async function seedAll() {
     await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/localhub-tokyo");
     console.log("Connected to MongoDB");
 
-    // Clear old events
+    // Clear old events & spots
     await Event.deleteMany({});
+    await Business.deleteMany({});
     
     // Create admin user
     let admin = await User.findOne({ email: "admin@localhub.com" });
@@ -172,9 +173,12 @@ async function seedAll() {
 
     // Run the spot importer
     console.log("Running spot import...");
-    require("./scripts/import_tokyo")();
-    // Wait, import_tokyo is async and calls process.exit(0). I should probably rewrite import_tokyo to export a function instead of calling itself.
+    await mongoose.model('Business').createIndexes();
+    const importTokyo = require("./scripts/import_tokyo");
+    await importTokyo();
 
+    console.log("\n✅ Seed complete!");
+    process.exit(0);
   } catch (err) {
     console.error("Seed error:", err);
     process.exit(1);
