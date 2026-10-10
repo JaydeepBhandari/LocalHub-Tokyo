@@ -1,169 +1,468 @@
+/* ============================================================
+   LocalHub — Design Tokens & Global Styles
+   ============================================================ */
 
-* {
+:root {
+  /* Tokyo Brand (Traditional Colors) */
+  --color-primary: #E94E1B; /* Shuiro Vermilion */
+  --color-primary-hover: #C93D13;
+  --color-primary-light: #FCE8E1;
+  --color-accent: #113255; /* Aiiro Indigo */
+  --color-accent-hover: #0A1E33;
+  --color-accent-light: #E0E7ED;
+  --color-gold: #C28F27; /* Kincha Gold */
+  --color-sakura: #FEDBE3; /* Sakura Pink */
+
+  /* Neutrals - Dark Default (Sumi Ink) */
+  --color-bg: #111111; /* Deep ink black */
+  --color-surface: #1E1E1E;
+  --color-surface-alt: #2A2A2A;
+  --color-border: #333333;
+  --color-border-light: #2A2A2A;
+  --color-text: #F4F4F4; /* Kinari Unbleached White */
+  --color-text-secondary: #B3B3B3;
+  --color-text-muted: #7A7A7A;
+
+  /* Status */
+  --color-success: #34A853;
+  --color-success-bg: #142A1E;
+  --color-error: #EA4335;
+  --color-error-bg: #2A0A0A;
+  --color-warning: #FBBC05;
+  --color-warning-bg: #2A1E0A;
+  --color-info: #4285F4;
+  --color-info-bg: #0A1A2A;
+
+  /* Rating */
+  --color-star: #FBBC05;
+
+  /* Typography */
+  --font-display: 'Shippori Mincho B1', 'Zen Antique', serif;
+  --font-body: 'Inter', 'Noto Sans JP', 'Zen Kaku Gothic New', sans-serif;
+  --font-serif: 'Shippori Mincho B1', serif;
+
+  /* Spacing scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* Shadows (cool toned) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.8);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Layout */
+  --max-width: 1400px;
+  --sidebar-width: 260px;
+  --nav-height: 72px;
+}
+
+/* Light mode (morning washi paper) */
+[data-theme="light"] {
+  --color-bg: #F9F6F0; /* Kinari / Washi paper */
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #EFEBE4;
+  --color-border: #E0DBD3;
+  --color-border-light: #EDE9E2;
+  --color-text: #1A1A1A;
+  --color-text-secondary: #5A5A5A;
+  --color-text-muted: #8A8A8A;
+  
+  --shadow-xs: 0 1px 2px rgba(26, 26, 26, 0.04);
+  --shadow-sm: 0 2px 8px rgba(26, 26, 26, 0.06);
+  --shadow-md: 0 4px 16px rgba(26, 26, 26, 0.08);
+  --shadow-lg: 0 8px 32px rgba(26, 26, 26, 0.1);
+  --shadow-xl: 0 16px 48px rgba(26, 26, 26, 0.12);
+  
+  --color-success-bg: #E8F5EE;
+  --color-error-bg: #FEF2F2;
+  --color-warning-bg: #FFFBEB;
+  --color-info-bg: #EFF6FF;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+
+*, *::before, *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html {
-  font-family: Arial, Helvetica, sans-serif;
-  color: #243047;
-  background: #f5f7fb;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
-  margin: 0;
   min-width: 320px;
+  line-height: 1.6;
 }
 
-button,
-input,
-select,
-textarea {
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h1 { font-size: clamp(1.75rem, 4vw, 2.75rem); }
+h2 { font-size: clamp(1.375rem, 3vw, 1.875rem); }
+h3 { font-size: clamp(1.125rem, 2.5vw, 1.375rem); }
+
+button, input, select, textarea {
   font: inherit;
+  color: inherit;
 }
 
 button {
   cursor: pointer;
+  border: none;
+  background: transparent;
 }
 
 a {
   color: inherit;
+  text-decoration: none;
 }
 
-.business-image {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 10px;
+img {
   display: block;
-  margin-top: 12px;
-}
-
-.business-card {
-  width: 100%;
-  max-width: 320px;
-  padding: 16px;
-  box-sizing: border-box;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-/* Business card */
-.business-card {
-  width: 100%;
   max-width: 100%;
-  padding: 18px;
-  margin-bottom: 20px;
-  box-sizing: border-box;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
 }
 
-/* Image appears first */
-.business-image {
-  display: block;
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 9px;
-  margin-bottom: 16px;
-}
-
-/* Name, type, description and rating */
-.business-info-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.business-name {
-  margin: 0;
-  font-size: 20px;
-  color: #1f2937;
-}
-
-.category-tag {
-  display: inline-block;
-  padding: 5px 10px;
-  background: #e0f2fe;
-  color: #0369a1;
-  border-radius: 20px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.business-description {
-  margin: 0;
-  color: #4b5563;
-  font-size: 14px;
-  flex: 1 1 200px;
-}
-
-.business-rating {
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: #92400e;
-}
-
-/* Opening and closing times on the same line */
-.business-hours-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 24px;
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #374151;
-}
-
-/* Location and phone */
-.business-details p {
-  margin: 7px 0;
-  color: #4b5563;
-  font-size: 14px;
-}
-
-/* Open and closed labels */
-.open-status {
-  color: #15803d;
-  font-weight: 600;
-  margin-bottom: 0;
-}
-
-.closed-status {
-  color: #dc2626;
-  font-weight: 600;
-  margin-bottom: 0;
-}
-
-/* Responsive layout for small screens */
-@media (max-width: 600px) {
-  .business-image {
-    height: 170px;
-  }
-
-  .business-info-row {
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .business-description {
-    flex-basis: 100%;
-  }
-
-  .business-hours-row {
-    gap: 10px 20px;
-  }
+ul, ol {
+  list-style: none;
 }
 
 #root {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   Focus & Accessibility
+   ============================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+.container {
+  width: min(var(--max-width), 92%);
+  margin: 0 auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================================
+   Typography & Theming Enhancements
+   ============================================================ */
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.business-card {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 0; /* Traditional shikishi square feel */
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.business-card::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  border: 1px solid var(--color-border-light);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.business-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.business-card .card-image-wrap {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+.business-card .card-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.business-card:hover .card-image-wrap img {
+  transform: scale(1.05);
+}
+
+.hanko-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-primary);
+  border-radius: 4px;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  transform: rotate(-10deg);
+  background: rgba(255,255,255,0.9);
+  z-index: 10;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] .hanko-badge {
+  mix-blend-mode: screen;
+  background: rgba(0,0,0,0.8);
+}
+
+.card-name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   Skeleton Loader
+   ============================================================ */
+
+.skeleton {
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+[data-theme="light"] .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.05) 50%,
+    transparent 100%
+  );
+}
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ============================================================
+   Map Custom Pins
+   ============================================================ */
+
+.custom-pin-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.custom-pin {
+  width: 24px;
+  height: 32px;
+  background: var(--color-primary);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  position: relative;
+  box-shadow: -1px 1px 4px rgba(0,0,0,0.5);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.custom-pin.hovered {
+  transform: scale(1.2) rotate(-45deg);
+  background: var(--color-gold);
+  z-index: 1000;
+}
+
+.custom-pin .pin-inner {
+  width: 12px;
+  height: 12px;
+  background: var(--color-bg);
+  border-radius: 50%;
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}
+
+/* Leaflet Cluster Overrides */
+.marker-cluster-small { background-color: rgba(233, 78, 27, 0.6); }
+.marker-cluster-small div { background-color: rgba(233, 78, 27, 0.9); color: white; }
+.marker-cluster-medium { background-color: rgba(233, 78, 27, 0.5); }
+.marker-cluster-medium div { background-color: rgba(233, 78, 27, 0.85); color: white; }
+.marker-cluster-large { background-color: rgba(233, 78, 27, 0.4); }
+.marker-cluster-large div { background-color: rgba(233, 78, 27, 0.8); color: white; }
+
+.marker-cluster {
+  background-clip: padding-box;
+  border-radius: 20px;
+}
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-top: 5px;
+  text-align: center;
+  border-radius: 15px;
+  font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+.marker-cluster span { line-height: 30px; }
+
+/* ============================================================
+   AppShell & Global Japanese Theme Overlays
+   ============================================================ */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 0;
+}
+
+.global-texture {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.global-watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Yuji Syuku', serif;
+  font-size: 40vw;
+  color: var(--color-text);
+  opacity: 0.02;
+  z-index: -1;
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Washi / Shikishi Frames for cards */
+.business-card {
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-base);
+}
+.business-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-light);
 }

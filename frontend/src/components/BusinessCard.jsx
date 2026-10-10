@@ -1,99 +1,133 @@
-import API_URL from "../api";
-function isBusinessOpen(openingTime, closingTime) {
-  if (!openingTime || !closingTime) return null;
+import { Link } from "react-router-dom";
+import { Star, MapPin, Phone } from "lucide-react";
+import { API_URL } from "../api";
+import CategoryPattern from "./CategoryPattern";
+
+function isBusinessOpen(hours) {
+  if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
 
   const now = new Date();
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const today = days[now.getDay()];
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const [openHour, openMinute] = openingTime.split(":").map(Number);
-  const [closeHour, closeMinute] = closingTime.split(":").map(Number);
+  const todayHours = hours[today];
+  if (!todayHours || todayHours.length === 0) return false;
 
-  const openMinutes = openHour * 60 + openMinute;
-  const closeMinutes = closeHour * 60 + closeMinute;
-
-  if (openMinutes <= closeMinutes) {
-    return currentMinutes >= openMinutes &&
-      currentMinutes < closeMinutes;
+  for (const interval of todayHours) {
+    if (!interval.open || !interval.close) continue;
+    const [openHour, openMinute] = interval.open.split(":").map(Number);
+    const [closeHour, closeMinute] = interval.close.split(":").map(Number);
+    
+    const openMinutes = openHour * 60 + openMinute;
+    let closeMinutes = closeHour * 60 + closeMinute;
+    
+    // Handle overnight (e.g. 18:00 - 02:00)
+    if (closeMinutes < openMinutes) {
+      if (currentMinutes >= openMinutes || currentMinutes <= closeMinutes) return true;
+    } else {
+      if (currentMinutes >= openMinutes && currentMinutes <= closeMinutes) return true;
+    }
   }
 
-  // Supports businesses open overnight
-  return currentMinutes >= openMinutes ||
-    currentMinutes < closeMinutes;
+  return false;
 }
 
 function BusinessCard({ business }) {
-  const openStatus = isBusinessOpen(
-    business.openingTime,
-    business.closingTime
-  );
+  const openStatus = isBusinessOpen(business.hours);
+  const coverImage = business.images && business.images.length > 0 
+    ? business.images.find(img => img.isCover) || business.images[0]
+    : null;
+
+  const renderImage = () => {
+    if (!coverImage) return <CategoryPattern category={business.category} size={48} />;
+    
+    if (coverImage.source === 'placeholder') {
+      return <CategoryPattern category={business.category} size={48} />;
+    }
+
+    const imgUrl = coverImage.url.startsWith('http') ? coverImage.url : `${API_URL}${coverImage.url}`;
+    return <img src={imgUrl} alt={business.name} loading="lazy" onError={(e) => {
+      e.target.style.display = 'none';
+      e.target.nextSibling.style.display = 'flex';
+    }} />
+  };
 
   return (
-    <div className="business-card">
+    <Link to={`/business/${business.slug || business._id}`} className="business-card">
+      <div className="card-image-wrap">
+        {renderImage()}
+        {coverImage && coverImage.source !== 'placeholder' && (
+          <div className="fallback-pattern" style={{ display: 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+            <CategoryPattern category={business.category} size={48} />
+          </div>
+        )}
 
-      {/* 1. Image first */}
-      {business.image && (
-        <img
-          src={`${API_URL}${business.image}`}
-          alt={business.name}
-          className="business-image"
-        />
-      )}
+        {openStatus !== null && (
+          <div className={`card-status-badge ${openStatus ? "open" : "closed"}`}>
+            {openStatus ? "Open Now" : "Closed"}
+          </div>
+        )}
 
-      {/* 2. Name, type, description and rating in one row */}
-      <div className="business-info-row">
-
-        <h3 className="business-name">
-          {business.name}
-        </h3>
-
-        <span className="category-tag">
-          {business.category || "Other"}
-        </span>
-
-        <p className="business-description">
-          {business.description || "No description available"}
-        </p>
-
-        <span className="business-rating">
-          ⭐ {business.rating ?? 0}/5
-        </span>
-
+        {business.isFeatured && (
+          <div className="card-featured-badge">Featured</div>
+        )}
       </div>
 
-      {/* 3. Opening and closing times in one row */}
-      <div className="business-hours-row">
-        <span>
-          <strong>Opens:</strong>{" "}
-          {business.openingTime || "Not provided"}
-        </span>
-
-        <span>
-          <strong>Closes:</strong>{" "}
-          {business.closingTime || "Not provided"}
-        </span>
+      <div className="card-body">
+        <span className="card-category">{business.category}</span>
+        
+        <h3 className="card-name">{business.name}</h3>
+        {business.nameJa && <div className="card-name-ja" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: 8 }}>{business.nameJa}</div>}
+        
+        <div className="card-location">
+          <MapPin size={14} />
+          {business.area ? `${business.area}, ${business.city}` : business.location}
+        </div>
       </div>
 
-      {/* 4. Additional business details */}
-      <div className="business-details">
-        <p>
-          <strong>Location:</strong>{" "}
-          {business.location || business.address || "Not provided"}
-        </p>
+      <div className="card-footer">
+        <div className="card-rating">
+          {business.avgRating > 0 ? (
+            <>
+              <Star size={16} fill="currentColor" />
+              <span>{business.avgRating.toFixed(1)}</span>
+              {business.reviewCount > 0 && (
+                <span className="card-review-count">({business.reviewCount})</span>
+              )}
+            </>
+          ) : (
+            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+              {business.priceLevel ? 'Price: ' + '$'.repeat(business.priceLevel) : (business.station ? `Near ${business.station}` : 'No reviews yet')}
+            </span>
+          )}
+        </div>
 
-        <p>
-          <strong>Phone:</strong>{" "}
-          {business.phone || "Not provided"}
-        </p>
+        {business.phone ? (
+          <div 
+            className="card-phone" 
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = `tel:${business.phone}`;
+            }}
+          >
+            <Phone size={14} />
+            <span>Call</span>
+          </div>
+        ) : (
+          <div 
+            className="card-phone" 
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(`https://www.google.com/maps/dir/?api=1&destination=${business.geo?.coordinates?.[1]},${business.geo?.coordinates?.[0]}`, '_blank');
+            }}
+          >
+            <MapPin size={14} />
+            <span>Directions</span>
+          </div>
+        )}
       </div>
-
-      {/* 5. Current open/closed status */}
-      {openStatus !== null && (
-        <p className={openStatus ? "open-status" : "closed-status"}>
-          {openStatus ? "🟢 Open Now" : "🔴 Closed"}
-        </p>
-      )}
-
-    </div>
+    </Link>
   );
 }
 

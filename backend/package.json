@@ -1,23 +1,41 @@
 {
-  "name": "backend",
+  "name": "localhub-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "LocalHub Community Spot Discovery API",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "seed": "node seed.js",
+    "import:tokyo": "node scripts/import_tokyo.js",
+    "audit:images": "node scripts/audit_images.js"
   },
-  "keywords": [],
+  "keywords": [
+    "community",
+    "local",
+    "business",
+    "directory"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.20.0",
+    "bcryptjs": "^3.0.2",
     "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.6",
     "express": "^5.2.1",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.11.1",
-    "multer": "^2.4.0"
+    "morgan": "^1.10.0",
+    "multer": "^2.4.0",
+    "opening_hours": "^3.15.0",
+    "sharp": "^0.35.5",
+    "slugify": "^1.6.9",
+    "zod": "^4.6.5"
   }
 }
