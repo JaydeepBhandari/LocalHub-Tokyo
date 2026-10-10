@@ -18,11 +18,7 @@ app.use(
   })
 );
 app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    "https://local-hub-tokyo.vercel.app",
-    "https://local-hub-tokyo-zmr7-plum.vercel.app"
-  ],
+  origin: true,
   credentials: true,
 }));
 
