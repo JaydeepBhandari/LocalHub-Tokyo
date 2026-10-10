@@ -1,0 +1,169 @@
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #243047;
+  background: #f5f7fb;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+.business-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin-top: 12px;
+}
+
+.business-card {
+  width: 100%;
+  max-width: 320px;
+  padding: 16px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Business card */
+.business-card {
+  width: 100%;
+  max-width: 100%;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Image appears first */
+.business-image {
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 9px;
+  margin-bottom: 16px;
+}
+
+/* Name, type, description and rating */
+.business-info-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.business-name {
+  margin: 0;
+  font-size: 20px;
+  color: #1f2937;
+}
+
+.category-tag {
+  display: inline-block;
+  padding: 5px 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 20px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.business-description {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  flex: 1 1 200px;
+}
+
+.business-rating {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #92400e;
+}
+
+/* Opening and closing times on the same line */
+.business-hours-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Location and phone */
+.business-details p {
+  margin: 7px 0;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+/* Open and closed labels */
+.open-status {
+  color: #15803d;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.closed-status {
+  color: #dc2626;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+/* Responsive layout for small screens */
+@media (max-width: 600px) {
+  .business-image {
+    height: 170px;
+  }
+
+  .business-info-row {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .business-description {
+    flex-basis: 100%;
+  }
+
+  .business-hours-row {
+    gap: 10px 20px;
+  }
+}
+
+#root {
+  min-height: 100vh;
+}
