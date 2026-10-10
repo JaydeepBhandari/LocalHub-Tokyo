@@ -17,6 +17,14 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
+app.use(cors({
+  origin: [
+    "http://localhost:5173", 
+    "https://local-hub-tokyo.vercel.app",
+    "https://local-hub-tokyo-zmr7-plum.vercel.app"
+  ],
+  credentials: true,
+}));
 
 // Request logging
 if (process.env.NODE_ENV !== "test") {
