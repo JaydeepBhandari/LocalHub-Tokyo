@@ -3,14 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   LayoutDashboard, Store, Users, Settings, LogOut, 
-  Plus, Search, Edit2, Trash2, X, Upload, Star, Activity 
+  Plus, Search, Edit2, Trash2, X, Upload, Star, Activity,
+  Link2, Image as ImageIcon, Sparkles, Check
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api, { API_URL } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { getSpotImageUrl } from "../utils/imageFallback";
 
-const CATEGORIES = ["Food and Izakaya", "Cafes and Kissaten", "Ramen and Street Food", "Shrines and Temples", "Parks and Gardens", "Museums and Galleries", "Shopping and Markets", "Nightlife and Bars", "Arcades and Entertainment", "Sento and Onsen", "Books and Records", "Everyday Essentials"];
+const CATEGORIES = ["Food and Izakaya", "Cafes and Kissaten", "Ramen and Street Food", "Shrines and Temples", "Parks and Gardens", "Museums and Galleries", "Shopping and Markets", "Nightlife and Bars", "Arcades and Entertainment", "Sento and Onsen", "Books and Records", "Everyday Essentials", "Landmarks and Views"];
 
 function SettingsTab() {
   const { data: settingsData, isLoading } = useQuery({
@@ -94,11 +96,13 @@ function AdminDashboard() {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [photoTab, setPhotoTab] = useState("upload"); // "upload" | "url"
 
   const initialFormState = {
-    name: "", category: "", description: "", location: "", area: "", city: "", 
+    name: "", nameJa: "", category: "Food and Izakaya", description: "", location: "", area: "", city: "Tokyo", 
     phone: "", website: "", priceLevel: 2, lat: "", lng: "", hoursText: "",
-    tags: "", isFeatured: false, isVerified: false, status: "approved"
+    station: "", line: "", tags: "", isFeatured: false, isVerified: false, status: "approved",
+    imageUrl: ""
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -120,9 +124,7 @@ function AdminDashboard() {
 
   const createMutation = useMutation({
     mutationFn: async (newData) => {
-      const { data } = await api.post("/businesses", newData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const { data } = await api.post("/businesses", newData);
       return data;
     },
     onSuccess: () => {
@@ -136,9 +138,7 @@ function AdminDashboard() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, updateData }) => {
-      const { data } = await api.put(`/businesses/${id}`, updateData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const { data } = await api.put(`/businesses/${id}`, updateData);
       return data;
     },
     onSuccess: () => {
@@ -191,40 +191,63 @@ function AdminDashboard() {
     }
   };
 
+  const handleRemovePhoto = (e) => {
+    if (e) e.stopPropagation();
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, imageUrl: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSuggestPhoto = () => {
+    const suggested = getSpotImageUrl({ category: formData.category });
+    setFormData(prev => ({ ...prev, imageUrl: suggested }));
+    setImagePreview(suggested);
+    setImageFile(null);
+    setPhotoTab("url");
+    toast.success(`Suggested authentic Tokyo photo for ${formData.category}`);
+  };
+
   const openModalForCreate = () => {
     setFormData(initialFormState);
     setEditingId(null);
     setImageFile(null);
     setImagePreview(null);
+    setPhotoTab("upload");
     setIsModalOpen(true);
   };
 
   const openModalForEdit = (business) => {
+    const existingImg = business.images && business.images.length > 0 
+      ? (business.images[0].url.startsWith('http') ? business.images[0].url : `${API_URL}${business.images[0].url}`)
+      : "";
+
     setFormData({
-      name: business.name,
-      category: business.category,
-      description: business.description,
-      location: business.location,
+      name: business.name || "",
+      nameJa: business.nameJa || "",
+      category: business.category || "Food and Izakaya",
+      description: business.description || "",
+      location: business.location || "",
       area: business.area || "",
-      city: business.city || "",
-      phone: business.phone,
+      city: business.city || "Tokyo",
+      phone: business.phone || "",
       website: business.website || "",
       priceLevel: business.priceLevel || 2,
       lat: business.geo?.coordinates?.[1] || "",
       lng: business.geo?.coordinates?.[0] || "",
+      station: business.station || "",
+      line: business.line || "",
       hoursText: business.hoursText || "",
       tags: business.tags ? business.tags.join(", ") : "",
-      isFeatured: business.isFeatured,
-      isVerified: business.isVerified,
-      status: business.status
+      isFeatured: !!business.isFeatured,
+      isVerified: !!business.isVerified,
+      status: business.status || "approved",
+      imageUrl: existingImg
     });
     setEditingId(business._id);
     setImageFile(null);
-    setImagePreview(
-      business.images && business.images.length > 0 
-      ? (business.images[0].url.startsWith('http') ? business.images[0].url : `${API_URL}${business.images[0].url}`)
-      : null
-    );
+    setImagePreview(existingImg || null);
+    setPhotoTab(existingImg ? "url" : "upload");
     setIsModalOpen(true);
   };
 
@@ -235,6 +258,7 @@ function AdminDashboard() {
       setEditingId(null);
       setImageFile(null);
       setImagePreview(null);
+      setPhotoTab("upload");
     }, 300);
   };
 
@@ -253,6 +277,8 @@ function AdminDashboard() {
     });
     if (imageFile) {
       data.append("image", imageFile);
+    } else if (formData.imageUrl) {
+      data.append("imageUrl", formData.imageUrl);
     }
 
     if (editingId) {
@@ -511,9 +537,16 @@ function AdminDashboard() {
               <h3 style={{ fontSize: 14, textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 12 }}>Basic Info</h3>
               <div className="modal-form-row">
                 <div className="form-group">
-                  <label>Business Name *</label>
-                  <input name="name" value={formData.name} onChange={handleInputChange} className="form-input" required />
+                  <label>Business Name (English) *</label>
+                  <input name="name" value={formData.name} onChange={handleInputChange} className="form-input" placeholder="e.g. Gonpachi Nishi-Azabu" required />
                 </div>
+                <div className="form-group">
+                  <label>Japanese Name (日本語)</label>
+                  <input name="nameJa" value={formData.nameJa || ""} onChange={handleInputChange} className="form-input" placeholder="e.g. 権八 西麻布" />
+                </div>
+              </div>
+
+              <div className="modal-form-row">
                 <div className="form-group">
                   <label>Category *</label>
                   <select name="category" value={formData.category} onChange={handleInputChange} className="form-input" required>
@@ -521,44 +554,53 @@ function AdminDashboard() {
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
+                <div className="form-group">
+                  <label>Price Level</label>
+                  <select name="priceLevel" value={formData.priceLevel || 2} onChange={handleInputChange} className="form-input">
+                    <option value="1">$ - Budget / Affordable</option>
+                    <option value="2">$$ - Moderate</option>
+                    <option value="3">$$$ - High End</option>
+                    <option value="4">$$$$ - Luxury / Fine Dining</option>
+                  </select>
+                </div>
               </div>
 
               <div className="form-group">
                 <label>Description</label>
-                <textarea name="description" value={formData.description} onChange={handleInputChange} className="form-input" rows="3" />
+                <textarea name="description" value={formData.description} onChange={handleInputChange} className="form-input" rows="3" placeholder="Tell visitors what makes this spot special..." />
               </div>
 
               <h3 style={{ fontSize: 14, textTransform: 'uppercase', color: 'var(--color-text-muted)', marginTop: 24, marginBottom: 12 }}>Location & Geo</h3>
               <div className="modal-form-row">
                 <div className="form-group">
                   <label>Street Address *</label>
-                  <input name="location" value={formData.location} onChange={handleInputChange} className="form-input" required />
+                  <input name="location" value={formData.location} onChange={handleInputChange} className="form-input" placeholder="e.g. 1-13-11 Nishi-Azabu" required />
                 </div>
                 <div className="form-group">
                   <label>City / Ward</label>
-                  <input name="city" value={formData.city} onChange={handleInputChange} className="form-input" />
+                  <input name="city" value={formData.city} onChange={handleInputChange} className="form-input" placeholder="e.g. Minato" />
                 </div>
               </div>
               
               <div className="modal-form-row">
                 <div className="form-group">
                   <label>Nearest Station</label>
-                  <input name="station" value={formData.station} onChange={handleInputChange} className="form-input" placeholder="e.g. Shibuya" />
+                  <input name="station" value={formData.station || ""} onChange={handleInputChange} className="form-input" placeholder="e.g. Roppongi Station" />
                 </div>
                 <div className="form-group">
                   <label>Transit Line</label>
-                  <input name="line" value={formData.line} onChange={handleInputChange} className="form-input" placeholder="e.g. JR Yamanote Line" />
+                  <input name="line" value={formData.line || ""} onChange={handleInputChange} className="form-input" placeholder="e.g. Hibiya Line" />
                 </div>
               </div>
               
               <div className="modal-form-row">
                 <div className="form-group">
-                  <label>Latitude (e.g. 21.1702)</label>
-                  <input name="lat" value={formData.lat} onChange={handleInputChange} className="form-input" />
+                  <label>Latitude (e.g. 35.6585)</label>
+                  <input name="lat" value={formData.lat} onChange={handleInputChange} className="form-input" placeholder="35.6585" />
                 </div>
                 <div className="form-group">
-                  <label>Longitude (e.g. 72.8311)</label>
-                  <input name="lng" value={formData.lng} onChange={handleInputChange} className="form-input" />
+                  <label>Longitude (e.g. 139.7454)</label>
+                  <input name="lng" value={formData.lng} onChange={handleInputChange} className="form-input" placeholder="139.7454" />
                 </div>
               </div>
 
@@ -566,37 +608,125 @@ function AdminDashboard() {
               <div className="modal-form-row">
                 <div className="form-group">
                   <label>Phone Number</label>
-                  <input name="phone" value={formData.phone} onChange={handleInputChange} className="form-input" />
+                  <input name="phone" value={formData.phone} onChange={handleInputChange} className="form-input" placeholder="e.g. 03-5771-0170" />
                 </div>
                 <div className="form-group">
                   <label>Hours Text</label>
-                  <input name="hoursText" value={formData.hoursText} onChange={handleInputChange} className="form-input" placeholder="e.g. Mon-Fri: 9am - 5pm" />
+                  <input name="hoursText" value={formData.hoursText} onChange={handleInputChange} className="form-input" placeholder="e.g. 11:30 - 23:00" />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Cover Photo (Local Upload)</label>
-                <div 
-                  style={{ border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-md)', padding: '24px', textAlign: 'center', cursor: 'pointer' }}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleImageChange} 
-                    accept="image/*" 
-                    style={{ display: 'none' }} 
-                  />
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="image-preview" style={{ maxHeight: 200, objectFit: 'contain' }} />
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--color-text-muted)' }}>
-                      <Upload size={32} style={{ marginBottom: 8 }} />
-                      <p>Click to upload a new cover photo</p>
-                      <span style={{ fontSize: '0.75rem' }}>Overrides current image. JPG, PNG or WEBP.</span>
-                    </div>
-                  )}
+              {/* Enhanced Photo Attachment Section */}
+              <div className="form-group" style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <label style={{ margin: 0, fontWeight: 600 }}>Spot Cover Photo</label>
+                  <div style={{ display: 'flex', background: 'var(--color-surface-alt)', borderRadius: 8, padding: 2, border: '1px solid var(--color-border)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPhotoTab("upload")}
+                      style={{ padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', background: photoTab === 'upload' ? 'var(--color-surface)' : 'transparent', color: 'var(--color-text)', fontWeight: photoTab === 'upload' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Upload size={13} /> Upload File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPhotoTab("url")}
+                      style={{ padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', background: photoTab === 'url' ? 'var(--color-surface)' : 'transparent', color: 'var(--color-text)', fontWeight: photoTab === 'url' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Link2 size={13} /> Image URL
+                    </button>
+                  </div>
                 </div>
+
+                {photoTab === "upload" ? (
+                  /* File Upload Dropzone */
+                  <div 
+                    style={{ border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-md)', padding: '20px', textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleImageChange} 
+                      accept="image/jpeg,image/png,image/webp" 
+                      style={{ display: 'none' }} 
+                    />
+                    {imagePreview ? (
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <img src={imagePreview} alt="Preview" style={{ maxHeight: 180, maxWidth: '100%', borderRadius: 8, objectFit: 'contain' }} />
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 8 }}>
+                          <span style={{ fontSize: 12, color: 'var(--color-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Check size={14} /> Photo Selected
+                          </span>
+                          <button 
+                            type="button" 
+                            onClick={handleRemovePhoto}
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '2px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--color-text-muted)' }}>
+                        <Upload size={28} style={{ marginBottom: 6, color: 'var(--color-primary)' }} />
+                        <p style={{ margin: 0, fontWeight: 500, color: 'var(--color-text)' }}>Click or drag to attach photo</p>
+                        <span style={{ fontSize: '0.75rem', marginTop: 4 }}>Supports JPG, PNG or WEBP (up to 5MB)</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* URL Input with Live Preview & Suggestion */
+                  <div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                      <input 
+                        type="url"
+                        name="imageUrl" 
+                        value={formData.imageUrl || ""} 
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          setImagePreview(e.target.value);
+                          setImageFile(null);
+                        }} 
+                        className="form-input" 
+                        placeholder="https://images.unsplash.com/..." 
+                        style={{ flex: 1 }}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={handleSuggestPhoto}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', fontSize: 12, whiteSpace: 'nowrap' }}
+                        title="Auto-fill authentic photo based on category"
+                      >
+                        <Sparkles size={14} color="var(--color-primary)" /> Auto-Suggest
+                      </button>
+                    </div>
+
+                    {imagePreview && (
+                      <div style={{ position: 'relative', background: 'var(--color-surface-alt)', borderRadius: 8, padding: 12, textAlign: 'center', border: '1px solid var(--color-border)' }}>
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          style={{ maxHeight: 180, maxWidth: '100%', borderRadius: 6, objectFit: 'contain' }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1000&auto=format&fit=crop";
+                          }}
+                        />
+                        <div style={{ marginTop: 6 }}>
+                          <button 
+                            type="button" 
+                            onClick={handleRemovePhoto}
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '2px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}
+                          >
+                            Clear Photo
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: 24, marginTop: 8 }}>

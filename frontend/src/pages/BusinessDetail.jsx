@@ -9,6 +9,8 @@ import toast from "react-hot-toast";
 import api, { API_URL } from "../api";
 import { useAuth } from "../context/AuthContext";
 import CategoryPattern from "../components/CategoryPattern";
+import { getSpotImageUrl } from "../utils/imageFallback";
+import TokyoMap from "../components/TokyoMap";
 
 function isBusinessOpen(hours) {
   if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
@@ -132,23 +134,18 @@ function BusinessDetail() {
   }
 
   const renderCover = () => {
-    if (!coverImage || coverImage.source === 'placeholder') {
-      return (
-        <div className="detail-hero-image" style={{ overflow: 'hidden', padding: 0 }}>
-          <CategoryPattern category={business.category} size={120} />
-        </div>
-      );
-    }
-    const imgUrl = coverImage.url.startsWith('http') ? coverImage.url : `${API_URL}${coverImage.url}`;
+    const imgUrl = getSpotImageUrl(business, API_URL);
     return (
-      <div className="detail-hero-image-wrap" style={{ position: 'relative' }}>
-        <img src={imgUrl} alt={business.name} className="detail-hero-image" onError={(e) => {
-          e.target.style.display = 'none';
-          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-        }} />
-        <div className="fallback-pattern" style={{ display: 'none', width: '100%', height: 400, justifyContent: 'center', alignItems: 'center', background: 'var(--color-surface-alt)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-          <CategoryPattern category={business.category} size={120} />
-        </div>
+      <div className="detail-hero-image-wrap" style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-xl)' }}>
+        <img 
+          src={imgUrl} 
+          alt={business.name} 
+          className="detail-hero-image" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1000&auto=format&fit=crop";
+          }} 
+        />
       </div>
     );
   };
@@ -341,6 +338,12 @@ function BusinessDetail() {
               </div>
             )}
           </div>
+
+          {business.geo?.coordinates && business.geo.coordinates[0] !== 0 && (
+            <div style={{ height: 240, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--color-border)', marginBottom: 16 }}>
+              <TokyoMap businesses={[business]} fitBoundsOnLoad={true} />
+            </div>
+          )}
 
           <div className="detail-action-buttons">
             <a 

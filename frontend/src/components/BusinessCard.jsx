@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Star, MapPin, Phone } from "lucide-react";
 import { API_URL } from "../api";
 import CategoryPattern from "./CategoryPattern";
+import { getSpotImageUrl } from "../utils/imageFallback";
 
 function isBusinessOpen(hours) {
   if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
@@ -35,33 +36,20 @@ function isBusinessOpen(hours) {
 
 function BusinessCard({ business }) {
   const openStatus = isBusinessOpen(business.hours);
-  const coverImage = business.images && business.images.length > 0 
-    ? business.images.find(img => img.isCover) || business.images[0]
-    : null;
-
-  const renderImage = () => {
-    if (!coverImage) return <CategoryPattern category={business.category} size={48} />;
-    
-    if (coverImage.source === 'placeholder') {
-      return <CategoryPattern category={business.category} size={48} />;
-    }
-
-    const imgUrl = coverImage.url.startsWith('http') ? coverImage.url : `${API_URL}${coverImage.url}`;
-    return <img src={imgUrl} alt={business.name} loading="lazy" onError={(e) => {
-      e.target.style.display = 'none';
-      e.target.nextSibling.style.display = 'flex';
-    }} />
-  };
+  const imgUrl = getSpotImageUrl(business, API_URL);
 
   return (
     <Link to={`/business/${business.slug || business._id}`} className="business-card">
       <div className="card-image-wrap">
-        {renderImage()}
-        {coverImage && coverImage.source !== 'placeholder' && (
-          <div className="fallback-pattern" style={{ display: 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-            <CategoryPattern category={business.category} size={48} />
-          </div>
-        )}
+        <img 
+          src={imgUrl} 
+          alt={business.name} 
+          loading="lazy" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1000&auto=format&fit=crop";
+          }} 
+        />
 
         {openStatus !== null && (
           <div className={`card-status-badge ${openStatus ? "open" : "closed"}`}>

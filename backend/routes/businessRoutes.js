@@ -9,6 +9,7 @@ const { z } = require("zod");
 // Input validation schema
 const businessSchemaZod = z.object({
   name: z.string().min(1, "Name is required").max(200),
+  nameJa: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   description: z.string().optional(),
   location: z.string().min(1, "Location is required"),
@@ -21,6 +22,10 @@ const businessSchemaZod = z.object({
   status: z.enum(["draft", "pending", "approved", "rejected", "archived"]).optional(),
   lat: z.union([z.number(), z.string()]).optional(),
   lng: z.union([z.number(), z.string()]).optional(),
+  station: z.string().optional(),
+  line: z.string().optional(),
+  tags: z.union([z.string(), z.array(z.string())]).optional(),
+  imageUrl: z.string().optional(),
   isFeatured: z.union([z.boolean(), z.string()]).optional(),
   isVerified: z.union([z.boolean(), z.string()]).optional(),
 });
@@ -231,6 +236,12 @@ router.post(
           source: 'local',
           isCover: true
         }];
+      } else if (req.body.imageUrl) {
+        businessData.images = [{
+          url: req.body.imageUrl,
+          source: 'unsplash',
+          isCover: true
+        }];
       }
 
       const business = await Business.create(businessData);
@@ -297,6 +308,19 @@ router.put(
           isCover: true
         };
         
+        if (existingBusiness && existingBusiness.images) {
+           existingBusiness.images.forEach(img => img.isCover = false);
+           updateData.images = [newImage, ...existingBusiness.images];
+        } else {
+           updateData.images = [newImage];
+        }
+      } else if (req.body.imageUrl) {
+        const newImage = {
+          url: req.body.imageUrl,
+          source: 'unsplash',
+          isCover: true
+        };
+        const existingBusiness = await Business.findById(req.params.id);
         if (existingBusiness && existingBusiness.images) {
            existingBusiness.images.forEach(img => img.isCover = false);
            updateData.images = [newImage, ...existingBusiness.images];

@@ -69,7 +69,7 @@ function Home() {
   const { data: eventsData, isLoading: eventsLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data } = await api.get("/events?limit=3");
+      const { data } = await api.get("/events?limit=10");
       return data.data;
     },
   });
@@ -227,6 +227,10 @@ function Home() {
                   style={{ padding: '6px 12px', borderRadius: 4, background: viewMode === 'split' ? 'var(--color-surface-alt)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                   onClick={() => setViewMode('split')}
                 ><MapIcon size={16}/> Split</button>
+                <button 
+                  style={{ padding: '6px 12px', borderRadius: 4, background: viewMode === 'map' ? 'var(--color-surface-alt)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                  onClick={() => setViewMode('map')}
+                ><MapPin size={16}/> Map</button>
               </div>
 
               <button
